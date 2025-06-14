@@ -37,8 +37,9 @@ export async function processTalkbox(
   formData.append('file', file);
   formData.append('params', JSON.stringify(params));
   formData.append('output_format', outputFormat);
+  formData.append('type', 'talkbox');
 
-  const response = await fetch('http://localhost:8000/process/talkbox', {
+  const response = await fetch('/api/process', {
     method: 'POST',
     body: formData,
   });
@@ -60,8 +61,9 @@ export async function processVocoder(
   formData.append('file', file);
   formData.append('params', JSON.stringify(params));
   formData.append('output_format', outputFormat);
+  formData.append('type', 'vocoder');
 
-  const response = await fetch('http://localhost:8000/process/vocoder', {
+  const response = await fetch('/api/process', {
     method: 'POST',
     body: formData,
   });
@@ -81,8 +83,9 @@ export async function processMidi(
   const formData = new FormData();
   formData.append('file', file);
   formData.append('output_format', outputFormat);
+  formData.append('type', 'midi');
 
-  const response = await fetch('http://localhost:8000/process/midi', {
+  const response = await fetch('/api/process', {
     method: 'POST',
     body: formData,
   });

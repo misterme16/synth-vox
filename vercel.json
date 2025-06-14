@@ -4,19 +4,23 @@
     {
       "src": "package.json",
       "use": "@vercel/next"
+    },
+    {
+      "src": "api/process.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
+      "src": "/api/process/(.*)",
+      "dest": "/api/process/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "$1"
+      "dest": "/$1"
     }
   ],
-  "functions": {
-    "api/process.py": {
-      "runtime": "python3.9",
-      "memory": 1024,
-      "maxDuration": 10
-    }
+  "env": {
+    "PYTHONPATH": "."
   }
 } 
