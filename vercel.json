@@ -1,10 +1,30 @@
 {
   "version": 2,
-  "functions": {
-    "api/process.py": {
-      "runtime": "python3.9",
-      "memory": 1024,
-      "maxDuration": 10
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "api/process.py",
+      "use": "@vercel/python@3.0.0"
     }
+  ],
+  "routes": [
+    {
+      "src": "/api/run",
+      "dest": "api/run.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "PYTHONPATH": "."
   }
 } 
