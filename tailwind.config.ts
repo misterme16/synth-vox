@@ -2,9 +2,9 @@ import type { Config } from 'tailwindcss';
 
 const config = {
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -90,4 +90,9 @@ const config = {
   plugins: [require("daisyui")],
 } satisfies Config;
 
-export default config; 
+// Add DaisyUI configuration after type checking
+const daisyuiConfig = {
+  themes: ["light", "dark"],
+};
+
+export default { ...config, daisyui: daisyuiConfig }; 
