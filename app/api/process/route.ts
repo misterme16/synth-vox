@@ -1,55 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
-  try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const type = formData.get('type') as string;
-    const params = JSON.parse(formData.get('params') as string);
+export const runtime = 'edge'; // Use edge runtime for better performance
 
-    if (!file || !type) {
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const params = formData.get('params') as string;
+    const outputFormat = formData.get('output_format') as string || 'wav';
+    const processingType = formData.get('type') as string || 'talkbox';
+
+    if (!file) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'No file provided' },
         { status: 400 }
       );
     }
 
-    // Convert file to base64
-    const buffer = await file.arrayBuffer();
-    const base64Audio = Buffer.from(buffer).toString('base64');
+    // Convert File to ArrayBuffer for Python API
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    // Call the FastAPI backend
-    const response = await fetch('http://localhost:8000/api/process', {
+    // Create FormData for Python API
+    const pythonFormData = new FormData();
+    pythonFormData.append('file', new Blob([buffer], { type: file.type }), file.name);
+    pythonFormData.append('params', params);
+    pythonFormData.append('output_format', outputFormat);
+
+    // Determine the API endpoint based on processing type
+    const apiEndpoint = processingType === 'midi' 
+      ? '/api/process/midi'
+      : processingType === 'vocoder'
+      ? '/api/process/vocoder'
+      : '/api/process/talkbox';
+
+    // Call Python API
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}${apiEndpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        audio: base64Audio,
-        type: type,
-        params: params,
-      }),
+      body: pythonFormData,
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || 'Failed to process audio');
+      throw new Error(error.error || 'Failed to process audio');
     }
 
-    const result = await response.json();
+    // Get the processed audio data
+    const processedAudio = await response.blob();
 
-    // Convert base64 back to audio blob
-    const processedAudioBuffer = Buffer.from(result.audio, 'base64');
-    
-    // Set content type and filename based on processing type
-    const contentType = type === 'midi' ? 'audio/midi' : 'audio/wav';
-    const extension = type === 'midi' ? '.mid' : '.wav';
-    
-    // Return the processed file
-    return new NextResponse(processedAudioBuffer, {
+    // Return the processed audio
+    return new NextResponse(processedAudio, {
       headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="processed_${file.name.split('.')[0]}${extension}"`,
+        'Content-Type': `audio/${outputFormat}`,
+        'Content-Disposition': `attachment; filename="processed.${outputFormat}"`,
       },
     });
   } catch (error) {
@@ -59,4 +62,17 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Configure CORS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
 } 
