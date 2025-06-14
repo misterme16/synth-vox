@@ -6,4 +6,5 @@ librosa>=0.10.1
 pyworld==0.3.4
 scipy>=1.11.3
 pydantic>=2.4.2
-python-multipart>=0.0.6 
+python-multipart>=0.0.6
+werkzeug>=2.3.7 
